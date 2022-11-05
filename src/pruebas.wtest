@@ -1,10 +1,216 @@
 import modelo.*
 
-describe "TP integrador" {
+// para nada copiamos la idea de los tests del TP4
+object fabricaDeObjetos{
 
-	test "testX" {
+	method crearCocinero() = new Cocinero()
+	method crearReceta(nivelDificultad, ingredientes) = new Receta(nivelDificultad = nivelDificultad, ingredientes = ingredientes)
+	method crearComida(calidad, receta) = new Comida(calidad = calidad, receta = receta)
+	method crearRecetaGourmet(nivelDificultad, ingredientes) = new RecetaGourmet(nivelDificultad = nivelDificultad, ingredientes = ingredientes)
+	method crearAcademia(estudiantes, recetario) = new Academia(estudiantes = estudiantes, recetario = recetario)
+	
+}
 
-		assert.fail("Falta implementar")
+describe "PUNTO 1" {
 
+	test "La experiencia que aporta normalmente una comida preparada a partir de una receta equivale a la cantidad de ingredientes de la misma multiplicada por su nivel de dificultad"{
+		const receta = fabricaDeObjetos.crearReceta(5, #{"azúcar", "flores", "y muchos colores"})
+		assert.equals(receta.experienciaAportadaNormalmente(), 5 * 3)
+	}
+
+	test "La experiencia que aporta una comida de calidad normal es la experiencia que aporta normalmente la receta"{
+		const receta = fabricaDeObjetos.crearReceta(7, #{"harina", "leche", "huevo", "azúcar"})
+		const comida = fabricaDeObjetos.crearComida(normal, receta)
+		
+		assert.equals(comida.experienciaAportada(), receta.experienciaAportadaNormalmente())
+	}
+
+	test "Cuando la calidad de la comida es pobre, la experiencia que aporta es el mínimo entre lo que aporta la receta normalmente y un valor de experiencia máxima"{
+		const receta = fabricaDeObjetos.crearReceta(2, #{"pan rallado", "peceto"})
+		pobre.experienciaMaxima(3)
+		const comida = fabricaDeObjetos.crearComida(pobre, receta)
+		
+		assert.equals(comida.experienciaAportada(), 3)
+	}
+	
+	test "Cuando la calidad de la comida es superior, aporta la experiencia correspondiente a la receta más un plus"{
+		const receta = fabricaDeObjetos.crearReceta(10, #{"lomo", "crema", "champignones", "sal", "lechuga", "tomate", "huevo"})
+		const comida = fabricaDeObjetos.crearComida(new Superior(plus = 8), receta)
+		assert.equals(comida.experienciaAportada(), 78)
+	}
+
+	test "Cuando un cocinero cocina varias comidas, se suma su experiencia"{
+		const recetaElaborada = fabricaDeObjetos.crearReceta(10, #{"lomo", "crema", "champignones", "sal", "lechuga", "tomate", "huevo"})
+		const comidaElaborada = fabricaDeObjetos.crearComida(new Superior(plus = 8), recetaElaborada)
+		const recetaFacil = fabricaDeObjetos.crearReceta(2, #{"pan rallado", "peceto"})
+		pobre.experienciaMaxima(3)
+		const comidaFacil = fabricaDeObjetos.crearComida(pobre, recetaFacil)
+		const recetaNormal = fabricaDeObjetos.crearReceta(7, #{"harina", "leche", "huevo", "azúcar"})
+		const comidaNormal = fabricaDeObjetos.crearComida(normal, recetaNormal)
+
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		cocinero.comidasPreparadas().add(comidaElaborada)
+		cocinero.comidasPreparadas().add(comidaFacil)
+		cocinero.comidasPreparadas().add(comidaNormal)
+
+		assert.equals(cocinero.nivelExperiencia(), comidaElaborada.experienciaAportada() + comidaFacil.experienciaAportada() + comidaNormal.experienciaAportada())
+	}
+}
+
+
+
+describe "PUNTO 2"{
+	
+	test "Un cocinero que no llegó a 100 de experiencia no supera el nivel principiante"{
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		assert.notThat(cocinero.superaNivel(principiante))
+	}
+	test "Un cocinero que tiene mas de 100 de experiencia y no preparo mas de 5 comidas dificiles supera el nivel principiante y no supera el nivel experimentado"{
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		const recetaFacil = fabricaDeObjetos.crearReceta(5, #{"pan rallado", "peceto", "arroz", "leche", "harina", "huevo", "sal"})
+		
+		pobre.experienciaMaxima(40)
+		
+		cocinero.prepararComida(recetaFacil)
+		cocinero.prepararComida(recetaFacil)
+		cocinero.prepararComida(recetaFacil)
+		
+		assert.that(cocinero.superaNivel(principiante))
+		assert.notThat(cocinero.superaNivel(experimentado))
+	}
+	test "Un cocinero que preparo mas de 5 comidas dificiles supera el nivel experimentado y no supera el nivel chef"{
+		// ya nos quedamos sin creatividad, asi que pusimos cualquier cosa en orden alfabético :(
+		const muchosingredientes = #{"arroz", "berenjena", "carne", "damasco", "edulcorante", "fernet", "gancia", "harina", "iguana", "jugo de tomate", "kiwi"}
+		const receta1 = fabricaDeObjetos.crearReceta(2, muchosingredientes)
+		const receta2 = fabricaDeObjetos.crearReceta(3, muchosingredientes)
+		const receta3 = fabricaDeObjetos.crearReceta(1, muchosingredientes)
+		const receta4 = fabricaDeObjetos.crearReceta(9, muchosingredientes)
+		const receta5 = fabricaDeObjetos.crearReceta(10, muchosingredientes)
+		const receta6 = fabricaDeObjetos.crearReceta(11, muchosingredientes)
+	
+		const comidasDificiles = [fabricaDeObjetos.crearComida(normal, receta1), fabricaDeObjetos.crearComida(normal, receta2), fabricaDeObjetos.crearComida(normal, receta3), fabricaDeObjetos.crearComida(normal, receta4), fabricaDeObjetos.crearComida(normal, receta5), fabricaDeObjetos.crearComida(normal, receta6)]
+
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		cocinero.comidasPreparadas(comidasDificiles)
+
+		assert.that(cocinero.superaNivel(experimentado))
+		assert.notThat(cocinero.superaNivel(chef))
+	}
+}	
+
+describe "PUNTO 3"{
+	
+	test "Si el cocinero prepara comidas que le den mas de 100 de experiencia pasa del nivel principante al experimentado"{
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		const recetaFacil = fabricaDeObjetos.crearReceta(5, #{"pan rallado", "peceto", "arroz", "leche", "harina", "huevo", "sal"})
+		
+		pobre.experienciaMaxima(40)
+		
+		cocinero.prepararComida(recetaFacil)
+		cocinero.prepararComida(recetaFacil)
+		cocinero.prepararComida(recetaFacil)
+
+		assert.equals(cocinero.nivelActual(), experimentado)
+	}
+
+	test "Si un cocinero es principiante solo puede preparar comidas no dificiles"{
+		const recetaFacil = fabricaDeObjetos.crearReceta(2, #{"pan rallado", "peceto"})
+		const muchosingredientes = #{"arroz", "berenjena", "carne", "damasco", "edulcorante", "fernet", "gancia", "harina", "iguana", "jugo de tomate", "kiwi"}
+		const recetaDificil = fabricaDeObjetos.crearReceta(10, muchosingredientes)
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		assert.that(cocinero.puedePreparar(recetaFacil))
+		assert.notThat(cocinero.puedePreparar(recetaDificil))
+	}
+	
+	test "Una receta es similar a otra por tener los mismos ingredientes o una dificultad de no más de un punto de diferencia"{
+		const ingredientes = #{"harina", "leche", "huevo", "azúcar"}
+		const receta1 = fabricaDeObjetos.crearReceta(5, ingredientes)
+		const receta2 = fabricaDeObjetos.crearReceta(2, ingredientes)
+		const receta3 = fabricaDeObjetos.crearReceta(3, #{"pan rallado", "peceto"})
+
+		assert.that(receta1.esSimilar(receta2))
+		assert.that(receta2.esSimilar(receta3))
+	}
+
+	test "Si un cocinero es Experimentado puede preparar comidas no dificiles o similares a las que ya preparó"{
+		const ingredientes = #{"harina", "leche", "huevo", "azúcar"}
+		const receta1 = fabricaDeObjetos.crearReceta(5, ingredientes)
+		const receta2 = fabricaDeObjetos.crearReceta(10, ingredientes)
+
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		cocinero.nivelActual(experimentado)
+		cocinero.prepararComida(receta1)
+		assert.that(cocinero.puedePreparar(receta2))
+	}
+	test "Si un cocinero intenta preparar una comida que no puede preparar se lanza una excepcion de tipo NoPuedePrepararRecetaException"{
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		const ingredientes = #{"harina", "leche", "huevo", "azúcar"}
+		const receta2 = fabricaDeObjetos.crearReceta(10, ingredientes)
+
+		assert.throwsExceptionWithType(new NoPuedePrepararRecetaException(), {cocinero.prepararComida(receta2)})
+	}
+
+	test "La calidad de la comida preparada por un cocinero principiante es normal si la receta tiene menos de 4 ingredientes, de lo contrario es pobre"{
+		const cocinero = fabricaDeObjetos.crearCocinero()
+		const receta = fabricaDeObjetos.crearReceta(2, #{"pan rallado", "peceto"})
+		const recetaElaborada = fabricaDeObjetos.crearReceta(10, #{"lomo", "crema", "champignones", "sal", "lechuga", "tomate", "huevo"})
+
+		assert.equals(cocinero.nivelActual().calidadComidaPreparada(receta, cocinero), normal)
+		assert.equals(cocinero.nivelActual().calidadComidaPreparada(recetaElaborada, cocinero), pobre)
+	}
+
+	test "Un cocinero experimentado que logró perfeccionar la receta a preparar, produce una comida de calidad superior con un plus equivalente a 
+	la cantidad de comidas con recetas similares que haya preparado / 10. Si no logró perfeccionar la receta a preparar, la comida le sale normal. Lo mismo aplica para los chefs."{
+		const cocineroExperimentado = fabricaDeObjetos.crearCocinero()
+		cocineroExperimentado.nivelActual(experimentado)
+		const cocineroChef = fabricaDeObjetos.crearCocinero()
+		cocineroChef.nivelActual(chef)
+		const receta1 = fabricaDeObjetos.crearReceta(5, #{"harina", "leche", "huevo", "azúcar", "frutillas"})
+		const muchosingredientes = #{"arroz"}
+		const receta2 = fabricaDeObjetos.crearReceta(6, muchosingredientes)
+
+		cocineroExperimentado.prepararComida(receta1)
+		cocineroChef.prepararComida(receta1)
+
+		assert.equals(cocineroExperimentado.nivelActual().calidadComidaPreparada(receta2, cocineroExperimentado).plus(), 1/10)
+		assert.equals(cocineroChef.nivelActual().calidadComidaPreparada(receta2, cocineroChef).plus(), 1/10)
+	}
+}
+
+describe "PUNTO 4"{
+	
+	test "Una receta Gourmet aporta el doble de experiencia que una receta y siempre son difíciles"{
+		const receta = fabricaDeObjetos.crearReceta(2, #{"pan rallado", "peceto"})
+		const recetaGourmet = fabricaDeObjetos.crearRecetaGourmet(2, #{"pan rallado", "peceto"})
+
+		assert.equals(receta.experienciaAportadaNormalmente() * 2, recetaGourmet.experienciaAportadaNormalmente())
+		assert.that(recetaGourmet.esDificil())
+	}
+}
+
+describe "PUNTO 5"{
+	test "Cuando una academia entrena a sus estudiantes, estos elijen la receta que mas experiencia aporta normalmente y la preparan"{
+		const ingredientes = #{"harina", "leche", "huevo", "azúcar"}
+		const receta1 = fabricaDeObjetos.crearReceta(7, ingredientes)
+		const receta2 = fabricaDeObjetos.crearReceta(2, ingredientes)
+		const recetario = #{receta1, receta2}
+		const estudianteDeCocina = fabricaDeObjetos.crearCocinero()
+		const estudianteDeCocina2 = fabricaDeObjetos.crearCocinero()
+		const estudianteDeCocina3 = fabricaDeObjetos.crearCocinero()
+		const estudiantes = #{estudianteDeCocina,estudianteDeCocina2,estudianteDeCocina3}
+		const academia = fabricaDeObjetos.crearAcademia(estudiantes, recetario)
+		estudianteDeCocina.nivelActual(principiante)
+		estudianteDeCocina2.nivelActual(experimentado)
+		estudianteDeCocina3.nivelActual(chef)
+		academia.entrenarEstudiantes()
+			 		 
+		assert.equals(estudianteDeCocina.comidasPreparadas().first().calidad(), estudianteDeCocina.nivelActual().calidadComidaPreparada(receta2, estudianteDeCocina))
+		assert.equals(estudianteDeCocina.comidasPreparadas().first().receta(), receta2)  // como es principiante elije la receta2 pq es facil
+		
+		assert.equals(estudianteDeCocina2.comidasPreparadas().first().calidad(), estudianteDeCocina2.nivelActual().calidadComidaPreparada(receta2, estudianteDeCocina))
+		assert.equals(estudianteDeCocina2.comidasPreparadas().first().receta(), receta2) // como es experimentado sin recetas similares a la receta1, elije 2
+		
+		assert.equals(estudianteDeCocina3.comidasPreparadas().first().calidad(), estudianteDeCocina3.nivelActual().calidadComidaPreparada(receta1, estudianteDeCocina))
+		assert.equals(estudianteDeCocina3.comidasPreparadas().first().receta(), receta1) // es chef asiq elije elije la que mas experiencia aporta porque puede preparar todas
 	}
 }

@@ -2,11 +2,11 @@
 
 Integrantes:
 
-- **Completar con nombre y apellido**
-- **Completar con nombre y apellido**
-- **Completar con nombre y apellido**
-- **Completar con nombre y apellido**
-- **Completar con nombre y apellido**
+- **Tomás D'Antonio**
+- **Juan Ignacio Aguirre**
+- **Gabriel Agustin Soares de Oliveira**
+- **Fernando Daniel Maqueda**
+- **Javier Federico Garcia**
 
 ## Consignas
 
