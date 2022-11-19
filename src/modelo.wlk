@@ -24,10 +24,10 @@ class Cocinero{
             throw new NoPuedePrepararRecetaException(message = "El cocinero todavia no puede preparar esta receta")
         }
         comidasPreparadas.add(new Comida(calidad = self.nivelActual().calidadComidaPreparada(receta, self), receta = receta))
-        self.superarNivel()
+        self.cambiarDeNivelSiSuperaNivelActual()
     }
 
-    method superarNivel(){
+    method cambiarDeNivelSiSuperaNivelActual(){
         if(self.superaNivel(nivelActual)){
             self.nivelActual(nivelActual.siguienteNivel())
         }
@@ -37,7 +37,7 @@ class Cocinero{
 
     method comidasConRecetasSimilares(receta) = self.comidasPreparadas().filter({comida => comida.receta().esSimilar(receta)})
 
-    method logroPerfeccionar(receta) = self.comidasConRecetasSimilares(receta).sum({comida => comida.experienciaAportada()}) >= receta.experienciaAportadaNormalmente() * 3
+    method logroPerfeccionar(receta) = self.comidasConRecetasSimilares(receta).sum({comida => comida.experienciaAportada()}) >= receta.experienciaRequeridaParaPerfeccionar()
 
     method entrenar(recetario){
         const laRecetaAPreparar= self.recetasQuePuedePreparar(recetario).max({receta => receta.experienciaAportadaNormalmente()})
@@ -45,6 +45,10 @@ class Cocinero{
     }
 
     method recetasQuePuedePreparar(recetario) = recetario.filter({receta => self.puedePreparar(receta)})
+    
+    method esSimilarAAlgunaQuePreparo(receta) = self.comidasPreparadas().any({comida => comida.receta().esSimilar(receta)})
+    
+    method preparoMasDe5ComidasDificiles() = self.comidasPreparadas().filter({comida => comida.receta().esDificil()}).size() > 5 
 }
 
 class Comida{
@@ -71,6 +75,8 @@ class Receta{
     method tieneMismosIngredientes(receta) = self.ingredientes() == receta.ingredientes()
 
     method dificultadSimilar(receta) = (self.nivelDificultad() - receta.nivelDificultad()).abs() <= 1
+    
+    method experienciaRequeridaParaPerfeccionar() = self.experienciaAportadaNormalmente() * 3
 }
 
 class RecetaGourmet inherits Receta{
@@ -96,7 +102,7 @@ class Superior{
 }
 
 object principiante{
-    method siguienteNivel() = experimentado
+    method siguienteNivel() = new Experimentado()
 
     method superaNivel(cocinero) = cocinero.nivelExperiencia() > 100
 
@@ -111,12 +117,12 @@ object principiante{
     }
 }
 
-object experimentado {
+class Experimentado {
     method siguienteNivel() = chef
 
-    method puedePreparar(receta, cocinero) = cocinero.comidasPreparadas().any({comida => comida.receta().esSimilar(receta)})
+    method puedePreparar(receta, cocinero) = cocinero.esSimilarAAlgunaQuePreparo(receta)
 
-    method superaNivel(cocinero) = cocinero.comidasPreparadas().filter({comida => comida.receta().esDificil()}).size() > 5 
+    method superaNivel(cocinero) = cocinero.preparoMasDe5ComidasDificiles()
 
     method calidadComidaPreparada(receta, cocinero){
        if(cocinero.logroPerfeccionar(receta)){           
@@ -127,16 +133,13 @@ object experimentado {
     }
 }
 
-object chef{
+object chef inherits Experimentado{
     // Por como esta definido el tp, nunca superaria en nivel chef entonces nunca necesitaria saber el siguienteNivel.
     // Sin embargo, se define metodo por cuestiones de polimorfismo.
-    method siguienteNivel() = self
+    override method siguienteNivel() = self
 
-    method puedePreparar(receta, cocinero) = true
+    override method puedePreparar(receta, cocinero) = true
     
-    method superaNivel(cocinero) = false
+    override method superaNivel(cocinero) = false
 
-// Cuando en el enunciado dice "Lo mismo aplica para los chefs." lo primero que se nos vino a la cabeza fue herencia, pero 
-// esa idea carecía de sentido conceptual. Asi que optamos por directamente mandarle el mensaje al objeto experimentado.
-    method calidadComidaPreparada(receta, cocinero) = experimentado.calidadComidaPreparada(receta, cocinero)
 }
